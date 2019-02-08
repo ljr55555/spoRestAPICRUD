@@ -1,0 +1,8 @@
+strConnectURL = "tenant.sharepoint.com"
+strUsername = b'c2cAphzxbVSJwXSPn82rQicgqqEXulSbexshn+lgJPxXb-yOum-tuPWBGq/lNnygsP/ivCQlHyC1GtjDUIlk-CEqCT3prpVai-UuOmqXc6y6EA-PJGlRaqdL8G=='
+strPassword = b'c2cApnvqMGW9g4sq6c/+mdSfA+6IDo-If2N5ySPr+Ei2axbe228mXmmKnUYokCR4GXM3xl41l+-Am6nbsXEwoqHby+RsDPu2oV5ndzIFxfeg'
+
+strContextURI = "https://tenant.sharepoint.com/sites/SiteName/_api/contextinfo"
+strListInfoURI = "https://tenant.sharepoint.com/sites/SiteName/_api/web/lists/GetByTitle('ListName')"
+strListDataURI = "https://tenant.sharepoint.com/sites/SiteName/_api/web/lists/GetByTitle('ListName')/items"
+strListContentTypeURI = "https://tenant.sharepoint.com/sites/SiteName/_api/web/lists/GetByTitle('ListName')/contenttypes"
