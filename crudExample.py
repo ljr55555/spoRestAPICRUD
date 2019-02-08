@@ -13,11 +13,10 @@ from requests_toolbelt.utils import dump
 import json
 from simplecrypt import encrypt, decrypt
 from base64 import b64encode, b64decode
-from config import strConnectURL, strUsername, strPassword, strContextURI, strListInfoURI
+from config import strConnectURI, strUsername, strPassword, strContextURI, strListInfoURI
 
 strListDataURI = strListInfoURI + "/items"
 strListContentTypeURI = strListInfoURI + "/contenttypes"
-
 
 # This needs to be the key used to stash the username and password values stored in config.py
 strKey = 'MyN3wK3Y5EncrYpt1-n'
@@ -97,12 +96,14 @@ def writeNewRecord(s, strContextURL, strListDataURL, strBody):
 # This function updates an existing record in SharePoint
 # Input: s -- connection to  SharePoint REST API
 #        strContextURL -- contextinfo endpoint for SP Site
-#        strListItemURL -- URI for list item to be updated
+#        strListDataURL -- URI for list items
 #        strBody -- dictionary of data to POST
 # Output: integer HTTP response
 ################################################################################
-def updateRecord(s, strContextURL,strListItemURL, strBody):
+def updateRecord(s, strContextURL,strListDataURL, strBody):
     strContentType = "application/json;odata=verbose"
+
+    strListItemURL = ("%s(%s)" % (strListDataURL, iRecordToUpdate))
 
     # Get digest value for use in POST
     requestToSP = s.post(strContextURL)
@@ -147,11 +148,10 @@ strUID = strUID.decode("utf-8")
 strPass = decrypt(strKey,b64decode(strPassword))
 strPass = strPass.decode("utf-8")
 
-spoConnection = sharepy.connect(strConnectURL,strUID,strPass)
+spoConnection = sharepy.connect(strConnectURI,strUID,strPass)
 
 ## Get ListItemEntityTypeFullName from list
 r = spoConnection.get(strListInfoURI)
-
 jsonReply = json.loads(r.text)
 strListItemEntityTypeFullName = jsonReply['d']['ListItemEntityTypeFullName']
 
@@ -189,8 +189,7 @@ for result in jsonResult:
 iRecordToUpdate = findSPRecordID(spoConnection, strListDataURI, "SiteID", "eq", "345678")
 print("Update will be made to record id %s" % iRecordToUpdate)
 dictRecordPatch = {"__metadata": { "type": strListItemEntityTypeFullName}, 'Title': "Rochester Office"}
-strListItemURI = ("%s(%s)" % (strListDataURI, iRecordToUpdate))
-iRecordPatchResult = updateRecord(spoConnection, strContextURI, strListItemURI, dictRecordPatch)
+iRecordPatchResult = updateRecord(spoConnection, strContextURI, strListDataURI, dictRecordPatch)
 if iRecordPatchResult is 204:
     print("Successfully updated record %s" % iRecordToUpdate)
 else:
