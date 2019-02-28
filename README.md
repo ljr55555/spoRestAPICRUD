@@ -22,3 +22,4 @@ Successfully updated record 21
 Successfully deleted record 21
 ```
 
+More details on using the script can be found at [http://lisa.rushworth.us/?p=4583](http://lisa.rushworth.us/?p=4583)
