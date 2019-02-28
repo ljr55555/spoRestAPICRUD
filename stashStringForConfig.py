@@ -1,9 +1,11 @@
-from simplecrypt import encrypt, decrypt
-from base64 import b64encode, b64decode
+from cryptography.fernet import Fernet
 
-strKey = 'MyN3wK3Y5EncrYpt1-n'
-strString = 'uid@example.com'
+key = Fernet.generate_key()
+print("Save this key for future decryption: %s" % key)
 
-ciphertext = encrypt(strKey, strString)
-strCipherText = b64encode(ciphertext)
-print(strCipherText)
+f = Fernet(key)
+
+ciphertext = f.encrypt(b"uid@example.com")
+print("The crypted version is %s" % ciphertext)
+strCipherText = f.decrypt(ciphertext)
+print("Decrypted version is %s" % strCipherText)
