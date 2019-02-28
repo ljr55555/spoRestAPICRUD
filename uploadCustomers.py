@@ -2,6 +2,8 @@
 # This script demonstrates using the SharePoint REST API perform CRUD operations
 # on a SharePoint list. 
 ################################################################################
+# REST API documentation:
+################################################################################
 # Import required modules
 ################################################################################
 
@@ -9,19 +11,20 @@ import datetime
 import requests
 from requests_toolbelt.utils import dump
 import json
-from cryptography.fernet import Fernet
+from simplecrypt import encrypt, decrypt
 from base64 import b64encode, b64decode
 from config import strConnectURI, strUsername, strPassword, strContextURI, strListInfoURI
-
-# As of 2019-02-08 do *NOT* use the PIP version, mods at https://github.com/ljr55555/sharepy/tree/develop required for functionality
-import sharepy
 
 strListDataURI = strListInfoURI + "/items"
 strListContentTypeURI = strListInfoURI + "/contenttypes"
 
 # This needs to be the key used to stash the username and password values stored in config.py
-strKey = b'wA2KHUkcA5aTZhsr4b3ptEX00y-jJRnDHsjRux3Uc3Y='
-f = Fernet(strKey)
+strKey = 'MyN3wK3Y5EncrYpt1-n'
+
+# As of 2019-02-08
+# Do *NOT* use the PIP version, mods at https://github.com/ljr55555/sharepy/tree/develop required for functionality
+import sharepy
+
 ################################################################################
 # Function definitions
 ################################################################################
@@ -139,10 +142,10 @@ def deleteRecord(s, strContextURL,strListDataURL, iRecordID):
 # End of functions
 ################################################################################
 
-strUID = f.decrypt(strUsername)
+strUID = decrypt(strKey,b64decode(strUsername))
 strUID = strUID.decode("utf-8")
 
-strPass = f.decrypt(strPassword)
+strPass = decrypt(strKey,b64decode(strPassword))
 strPass = strPass.decode("utf-8")
 
 spoConnection = sharepy.connect(strConnectURI,strUID,strPass)
@@ -152,57 +155,16 @@ r = spoConnection.get(strListInfoURI)
 jsonReply = json.loads(r.text)
 strListItemEntityTypeFullName = jsonReply['d']['ListItemEntityTypeFullName']
 
-# CREATE list item
-strBody = {"__metadata": { "type": strListItemEntityTypeFullName}, "Title": "Bedford Office", "SiteID": '123456', "MailingAddress": "17500 Rockside Road", "City": "Bedford", "State": "OH", "ZipCode": "44146"}
-iNewRecordResult = writeNewRecord(spoConnection, strContextURI, strListDataURI, strBody)
-
-strBody = {"__metadata": { "type": strListItemEntityTypeFullName}, "Title": "Twinsburg Office", "SiteID": '234567', "MailingAddress": "1925 Enterprise Parkway", "City": "Twinsburg", "State": "OH", "ZipCode": "44087"}
-iNewRecordResult = writeNewRecord(spoConnection, strContextURI, strListDataURI, strBody)
-
-strBody = {"__metadata": { "type": strListItemEntityTypeFullName}, "Title": "Twinsburg Office", "SiteID": '345678', "MailingAddress": "600 Willowbrook Office Park", "City": "Fairport", "State": "NY", "ZipCode": "14450"}
-iNewRecordResult = writeNewRecord(spoConnection, strContextURI, strListDataURI, strBody)
-if iNewRecordResult is 201:
-    print("Successfully created record")
-else:
-    print("Failed to create record -- HTTP result %s" % iNewRecordResult)
-
-# READ full list
-print("Full list:")
-jsonResult = findSPRecord(spoConnection, strListDataURI)
-for result in jsonResult:
-    dictRecord = result
-    print("%s:\t%s" % (result["SiteID"], result["Title"]))
-
-# READ filtered list
-## For supported ODATA query operations, see
-##  https://docs.microsoft.com/en-us/sharepoint/dev/sp-add-ins/use-odata-query-operations-in-sharepoint-rest-requests#bk_supported
-print("List filtered with SiteID eq 234567:")
-jsonResult = findSPRecord(spoConnection, strListDataURI, "SiteID", "eq", "234567")
-for result in jsonResult:
-    dictRecord = result
-    print("%s:\t%s" % (result["SiteID"], result["Title"]))
-
-# UPDATE list item
-iRecordToUpdate = findSPRecordID(spoConnection, strListDataURI, "SiteID", "eq", "345678")
-print("Update will be made to record id %s" % iRecordToUpdate)
-dictRecordPatch = {"__metadata": { "type": strListItemEntityTypeFullName}, 'Title': "Rochester Office"}
-iRecordPatchResult = updateRecord(spoConnection, strContextURI, strListDataURI, dictRecordPatch)
-if iRecordPatchResult is 204:
-    print("Successfully updated record %s" % iRecordToUpdate)
-else:
-    print("Failed to update record %s -- HTTP result %s" % (iRecordToUpdate, iRecordPatchResult))
-
-# View changed record
-jsonResult = findSPRecord(spoConnection, strListDataURI, "SiteID", "eq", "345678")
-for result in jsonResult:
-    dictRecord = result
-    print("%s:\t%s" % (result["SiteID"], result["Title"]))
-
-
-# DELETE list item
-iRecordToDelete = findSPRecordID(spoConnection, strListDataURI, "SiteID", "eq", "345678")
-iDeletionResult = deleteRecord(spoConnection, strContextURI, strListDataURI, iRecordToDelete)
-if iDeletionResult is 200:
-    print("Successfully deleted record %s" % iRecordToDelete)
-else:
-    print("Failed to deleted record %s -- HTTP result %s" % (iRecordToDelete, iDeletionResult))
+with open(".\source.txt") as f:
+    for line in f:
+        # CREATE list item
+        strCustomerInfo = line.split("\t")
+        strBody = {"__metadata": { "type": strListItemEntityTypeFullName}, "Title": strCustomerInfo[0], "CustomerID": strCustomerInfo[1], "CustomerName": strCustomerInfo[2], "CustomerAddress": strCustomerInfo[3], "City": strCustomerInfo[4], "State": strCustomerInfo[5], "Zip": strCustomerInfo[6]}
+        #print(strBody)
+    
+        iNewRecordResult = writeNewRecord(spoConnection, strContextURI, strListDataURI, strBody)
+        if iNewRecordResult is 201:
+            print("Successfully created record %s" % strCustomerInfo[0])
+        else:
+            print("Failed to create record %s -- HTTP result %s" % (strCustomerInfo[0], iNewRecordResult))
+    
